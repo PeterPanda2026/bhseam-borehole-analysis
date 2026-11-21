@@ -1,0 +1,15 @@
+# data - not published
+*.csv
+*.xlsx
+*.xls
+*.json
+
+# generated figures and output
+output/
+*.png
+*.pdf
+*.html
+
+# Python
+__pycache__/
+*.pyc

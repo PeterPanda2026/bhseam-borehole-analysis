@@ -1,0 +1,243 @@
+SHALLOW MINE WORKINGS AND FAULTS - DRILLING AND GROUTING: PROJECT DATA (WHOLE SITE)
+Anonymised records from a coalfield site
+================================================================================
+
+1. WHAT IS IN THIS FOLDER
+--------------------------------------------------------------------------------
+drilling_logs.xlsx
+    The drilling logs for all 9,778 boreholes on the site that have both a log
+    and a surveyed position (an area about 565 m east-west by 490 m
+    north-south): 9,245 production holes, 504 perimeter holes, 26 test holes
+    and 3 test-grout holes. They are as the site staff typed them: one
+    worksheet per plot (plots 8, 7, 6, 5, 4, 3, 2, 1, C, B, A, from south west
+    to north east), with each borehole one block of the paper log form, one
+    block after another. In each sheet the production and test holes come
+    first, by line and column, and the perimeter holes of that plot follow.
+
+    Each sheet has 11 columns. The first three are index columns, added when
+    the records were typed up; they are not part of the printed form and carry
+    no information of their own:
+        A  line letter of the hole
+        B  column number of the hole
+           (A and B together are simply the hole number, e.g. G + 23 = G23,
+            repeated on every row of that hole's block so that a sheet can be
+            filtered or sorted by hole; for a perimeter hole A is P or PP and
+            B its number, e.g. P + 135 = P135; for a test hole B carries the
+            suffix, e.g. B + 8-T = B8-T, C + 55TG = C55TG)
+        C  the line number within the printed form, running about 4 to 46
+    The remaining eight columns are the form itself:
+        D  description of strata        H  casing depth
+        E  rig, and some heading text   I  bit size (mm)
+        F  depth from ('gl' = ground    J  comments, and the value of the
+           level); also holds the          BH No. and DATE DRILLED boxes
+           "DRILLING LOG" heading       K  plot number
+        G  depth to base of stratum
+
+borehole_locations.csv
+    Position of every one of those boreholes:
+        hole_id         the hole's full name: plot + hole number, e.g. 4G23
+        plot            plot number, as in the PLOT box of the log
+        hole_no         hole number, as in the BH No. box of the log
+        hole_type       production, perimeter, test (cored after grouting to
+                        check the treated ground) or test grout (TG)
+        x_m, y_m        local coordinates in metres; x increases east,
+                        y increases north, from an arbitrary local origin just
+                        south west of the site (x 5 to 569 m, y 13 to 504 m)
+        ground_level_m  ground surface at the hole, in metres above a local
+                        datum (the lowest hole in this set = 0.00)
+    Every hole in the logs has a position and every position has a log; join on
+    hole_id (plot + BH No.).
+    A test hole was set out at a grid point, so it has the same position as the
+    production hole of that number (e.g. 4B8-T and 4B8); it was in fact drilled
+    close beside it.
+
+faults.csv
+    The faults in the worked seam, traced from the colliery's abandonment plan
+    of that seam, in the same local x, y as the boreholes:
+        fault_id        F1 ... F13 (numbered west to east)
+        vertex          order of the points along the fault line
+        x_m, y_m        local coordinates (m)
+    Each fault is a polyline (join the vertices in order). The traces are
+    clipped to the area of the boreholes plus 20 m, so the faults carry on
+    beyond it.
+
+fault_throws.csv
+    One row per fault:
+        throw_as_marked   the figure written beside the fault on the plan
+        throw_ft          the same figure in decimal feet
+        figure_uncertain  TRUE where the figure is hard to read or it is not
+                          clear which line it belongs to
+        length_in_area_m  length of the trace inside the area
+        remarks           how faults connect, and anything odd about the figure
+    The figure is the THROW: the vertical displacement of the seam between the
+    two sides of the fault, in feet and inches as written on old British mine
+    plans. 4/6 means 4 ft 6 in (1.37 m); 3/- means 3 ft 0 in (0.91 m).
+    The plan does not say here which side is downthrown - that is for you to
+    find from the boreholes.
+
+read_drilling_logs.py
+    Reads drilling_logs.xlsx and writes one row per soil/rock layer to
+    strata_layers.csv (hole number, plot, driller, rig, layer description,
+    depth from, depth to, thickness, casing, bit size, comments).
+    Needs pandas and openpyxl.
+
+plot_borehole_layout.py
+    Draws the boreholes in plan, coloured by plot, with the fault traces and
+    their throws. Needs pandas and matplotlib.
+
+Plotting and analysis scripts (all in the local x, y of this data set; each
+writes its figures and tables to a folder output/ next to the scripts; the
+first run reads the logs and saves them as strata_layers.csv - the same file
+read_drilling_logs.py writes - so later runs are quick).
+Need pandas, numpy, scipy, matplotlib and openpyxl; plot_3d.py also plotly
+(pip install plotly).
+  site_data.py           shared loading of holes, strata and faults; the
+                         setting-out grid; the rules that turn a driller's
+                         description into a stratum class (classify)
+  plot_all_holes.py      plan of every hole by type, with the plot outlines
+                         and the section lines; index map of all grid lines
+  plot_section.py        cross-sections along lines of grid holes, by depth or
+                         by level; "python plot_section.py all" draws one for
+                         every grid line; also writes the description -> class
+                         table (strata_classification.xlsx)
+  plot_fault_section.py  a level section with the faults marked where they
+                         cross it
+  plot_3d.py             interactive 3D view (HTML) of the strata near a line
+  plot_seam_contours.py  depth and level contours of the worked-seam horizon
+  seam_model.py          assigns every coal layer to the upper, worked or
+                         lower seam (plane fits and nearest-neighbour rules),
+                         with a list of doubtful holes and a map of each seam
+  Run any of them with  python <script>.py ; the docstring at the top of each
+  file gives the options.
+
+project_notes.txt
+    This file.
+
+2. THE SITE AND THE GROUND
+--------------------------------------------------------------------------------
+The ground is undermined by old, shallow coal workings. Before the land could be
+built on, it was drilled on a close grid and the workings were filled with
+grout. These are the drilling records from that work.
+
+The sequence in nearly every log is:
+  * Overburden / boulder clay (glacial till) from ground level down to rockhead,
+    typically 8.5 to 20 m (median about 11.5 m);
+  * Coal Measures bedrock below: mostly mudstone, some sandstone, and thin coal
+    seams.
+Holes are mostly 16 to 36 m deep (median 25 m); a very few are deeper or
+shallower.
+
+The logs describe the ground as it was drilled, so the words carry meaning:
+  "Coal"                  intact coal was drilled (a pillar, or unworked coal)
+  "Void"                  an open cavity - an unfilled working
+  "Broken" / "soft"       disturbed or weak ground, typically collapsed workings
+                          ("goaf"), or weathering near a subcrop
+  "Grout"                 grout from an earlier hole was drilled through
+  FWR / FAR               full water return / full air return (nothing lost)
+  "Loss of flush"         the flush water or air escaped into the ground, which
+                          usually means an open void or very broken ground
+
+On the whole site: about 6,750 coal layers in about 5,540 holes, about 210
+layers logged as void, 1,860 as broken, 5,970 as soft, and about 670 holes
+drilled through earlier grout (counts by simple word search of the
+descriptions). Coal was met mostly between 11 and 33 m depth.
+
+3. THE COAL SEAMS AND THE FAULTS
+--------------------------------------------------------------------------------
+Three shallow seams underlie or subcrop in the area of the works. Their names
+are withheld with the rest of the site information; they are called the upper,
+worked and lower seam here. The strata dip gently to the north east (about
+1 in 18 on the colliery plan).
+
+  Upper seam
+      Crosses the east of the site from north west to south east and subcrops
+      there. Up to about 0.76 m thick.
+
+  Worked seam  - the one that was mined, and the target of the grouting
+      Subcrops along the southern boundary of the site and underlies most of it
+      at depths between about 15 m and 60 m; about 0.55 to 1.14 m thick.
+      Three conditions were found when drilling:
+        - unworked coal: full seam thickness, no voids;
+        - old workings with the coal pillars still standing: coal, and voids
+          where the roadways are still open;
+        - goaf, where the pillars were taken on retreat and the ground has
+          collapsed: little or no coal, and much broken or soft ground.
+
+  Lower seam
+      Underlies the whole site at about 15 m to 70 m depth, in two leaves: the
+      upper up to about 1.22 m and the lower up to about 0.92 m thick. It was
+      not treated, but the deeper holes reached it.
+
+Within one borehole the order of the seams cannot be mistaken, but which seams
+a hole has reached depends on where it is and how deep it went. A hole that
+stopped at 22 m has disproved nothing below 22 m, and a hole that drilled
+through the worked horizon without logging coal may be telling you the coal was
+worked away there, not that the seam is absent.
+
+Faults. Thirteen fault traces cross the area. The throws written on the plan
+are 1 ft 6 in (F2, F6), 2 ft 6 in (F3), 3 ft (F5, F7, F9) and 60 ft (F10);
+the figures for F2, F5, F6, F7 and F10 are uncertain (see fault_throws.csv).
+F10 is one of two parallel lines either side of a 60/- figure with an arrow,
+which may together form one fault zone. The other faults have no figure that
+can be read. Larger faults lie north and east of the area and are not included.
+
+Things to think about:
+  * across a fault the same seam sits at a different level: a smooth surface
+    fitted through the coal picks will blur the step;
+  * a fault on the plan is where the miners met it in the seam, so its trace
+    is only as good as the workings were close;
+  * a fault's throw can change along its length or die out;
+  * a hole near a fault may meet broken ground, or the seam twice, or not at
+    all.
+
+4. HOW THE HOLES WERE SET OUT, AND THEIR SPACING
+--------------------------------------------------------------------------------
+Local grid
+  Holes were set out on a local grid of 60 m wide "plots" running north west to
+  south east. Plots 1 to 8 are numbered upwards towards the south west; plots
+  C, B and A lie north east of plot 1, in the north of the site.
+  Each plot is divided along its length into "lines", lettered A-H, J-N, Q-Y
+  (I, O and P are not used) at 3 m intervals, counted from the plot boundary
+  towards the north east.
+  Lines are divided at right angles into 3 m "columns", numbered 1, 2, 3... from
+  north west to south east. Columns north west of column 1 are numbered 0, 999,
+  998 and so on.
+  A hole is named plot + line letter + column number: 4G23 is plot 4, line G,
+  column 23. In the logs the plot is usually in its own cell, so the hole number
+  alone may read "G23".
+
+Drilling sequence and spacing
+  Probe holes      first, at 12 m spacing by line and 48 m by column number, to
+                   give advance notice of the seam depth.
+  Primary infill   two overlapping 6 m x 6 m square grids aligned with the local
+                   grid; the second grid is offset so each of its holes sits at
+                   the centre of four holes of the first. (Where the worked seam
+                   is intact, only one grid was used.)
+  Secondary infill drilled only around a probe or primary hole that took more
+                   than 15 tonnes of grout: four holes 3 m from it, forming a
+                   square turned 45 degrees to the local grid.
+  Perimeter holes  along the site boundaries, numbered P1, P2 ... and (a later
+                   campaign) PP1, PP2 .... Included where the hole has a
+                   surveyed position (504 holes); about 230 perimeter holes,
+                   mostly in plot 1, have a log but no position and are left
+                   out.
+  Test holes       drilled after grouting to check the treated ground (named
+                   with -T), and test-grout holes (TG). Included where the
+                   hole has a position (29 holes); a few without one are left
+                   out.
+
+Because the local grid runs north west to south east, any straight section line
+in x or y cuts across the plots at an angle, so the holes do not form straight
+lines along it. Deciding how to project them onto a section is part of the
+work.
+
+5. DATA QUALITY
+--------------------------------------------------------------------------------
+The logs were typed on site by the supervising staff and have not been
+corrected. They contain the usual errors: layers whose depths overlap or leave a
+gap, descriptions missing from a layer, misspellings, a form or two typed
+slightly out of place, and blank or impossible values here and there (one hole
+has a depth of over 200 m, for example). Finding them and deciding what to do
+about them is part of the exercise.
+The fault traces were digitised from a scanned plan; positions are good to a
+few metres, and the throw figures are as legible as the scan allows.
